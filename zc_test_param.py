@@ -1,16 +1,16 @@
 class wifi_test_parameter:
     def __init__(self):
-        self.uart_port = 'com11'
+        self.uart_port = 'com33'
         self.uart_baud = 9600
         self.is_continue = 1
         self.ota_test_count = 0
         self.connect_difrouter_test_count = 1
         self.connect_info_test_count = 1
         self.bind_ubind_test_count = 1
-        self.ntp_test_count = 0
-        self.router_disnet_test_count = 0
+        self.ntp_test_count = 1
+        self.router_disnet_test_count = 1
         self.router_blackout_test_count = 1
-        self.headbeat_test_count = 0
+        self.headbeat_test_count = 1
         self.con_wifi_test_count = 1
         self.con_lan_wifi_test_count = 1
         self.unite_firmware_test_count = 1

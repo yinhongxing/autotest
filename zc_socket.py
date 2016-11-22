@@ -36,7 +36,7 @@ class SocketThread(threading.Thread):
                 #data = ord(revcData[2])
                 now = datetime.datetime.now()
                 otherStyleTime = now.strftime("%Y-%m-%d %H:%M:%S")
-                print otherStyleTime+"recvdata"+revcData
+                print otherStyleTime+"recv data"+revcData
                 self.q.put(revcData)
                # #print data
             self.c, (remotehost, remoteport) = self.s.accept()

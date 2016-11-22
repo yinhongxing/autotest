@@ -142,15 +142,16 @@ class SerialThread(threading.Thread):
         else:
             self.q.put(0)
     def wifi_license(self):
+        #print "license ok"
         if self.databuf[40] == 1:
             for i in range(29):
                 if self.databuf[i+11] >= 128:
                     self.databuf[i + 11] = self.databuf[i + 11] - 256
                 self.Wifi_status.Wifilicense[i] = self.databuf[i+11]
-            #print "license ok"
-            #print self.Wifi_status.Wifilicense
+
+        #print self.Wifi_status.Wifilicense
     def wifi_init_ok(self):
-        ##print "wifi init ok"
+        #print "wifi init ok"
 
         self.Wifi_status.status_init()
     def wifi_con_redirect(self):
@@ -203,7 +204,7 @@ class SerialThread(threading.Thread):
     def DataRecv(self):
             for i in range(self.n):
                 data=ord(self.text[i])
-               # #print  data
+                #print  data
                 if self.flag == 0:
                     if data == 0x5A:
                         self.flag = 1
@@ -218,7 +219,7 @@ class SerialThread(threading.Thread):
                         self.curpklen=self.curpklen+data
                     elif self.curpklen==self.datalen:
                         if data==0x5b:
-                            ##print "recv data\n"
+                            #print "recv data\n"
                             self.DateUnpack()
                         else:
                             print "error data end\n"
