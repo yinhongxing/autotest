@@ -348,11 +348,11 @@ class wifi_test:
        # if self.Wifi_status.DisConCloud ==0:
         #    flag += 1
        #     break
-        for i in range(60):
+        for i in range(150):
             if self.Wifi_status.ConGateway >= 22:
                 break
             else:
-                time.sleep(10)
+                time.sleep(4)
         if self.Wifi_status.ConGateway < 22:
             print "err reconnect gateway time out"
             while True:
@@ -360,7 +360,11 @@ class wifi_test:
                 if self.data_unpack(3) == 1:
                     break
             return 0
-        time.sleep(4)
+        for i in range(15):
+            if self.Wifi_status.ConRedirect != 0:
+                break
+            else:
+                time.sleep(4)
         if self.Wifi_status.ConRedirect == 0:
             print "err not connect redirect"
             while True:
