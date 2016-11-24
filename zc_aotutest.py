@@ -162,6 +162,9 @@ class wifi_test:
             if input =="2" or input =="":
                 if(os.path.exists('autotest.xml')):
                     self.load_param()
+                else:
+                    print "not exists xml file use custom parameter"
+                    self.custom_parm()
             else:
                 self.custom_parm()
     def data_unpack(self,msgcode):
