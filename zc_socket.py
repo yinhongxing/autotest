@@ -34,9 +34,9 @@ class SocketThread(threading.Thread):
                     self.c.close()
                     break
                 #data = ord(revcData[2])
-                now = datetime.datetime.now()
-                otherStyleTime = now.strftime("%Y-%m-%d %H:%M:%S")
-                print otherStyleTime+"recv data"+revcData
+                # now = datetime.datetime.now()
+                # otherStyleTime = now.strftime("%Y-%m-%d %H:%M:%S")
+                # print otherStyleTime+"recv data"+revcData
                 self.q.put(revcData)
                # #print data
             self.c, (remotehost, remoteport) = self.s.accept()
@@ -57,9 +57,9 @@ class SocketThread(threading.Thread):
             send_data[i + 8 ]= payload_data[i]
     def net_send(self,data):
         json = demjson.encode(data)
-        now = datetime.datetime.now()
-        otherStyleTime = now.strftime("%Y-%m-%d %H:%M:%S")
-        print otherStyleTime+json
+        # now = datetime.datetime.now()
+        # otherStyleTime = now.strftime("%Y-%m-%d %H:%M:%S")
+        # print otherStyleTime+json
 
         self.q.queue.clear()
         #self.c.send(json)
