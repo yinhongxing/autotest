@@ -53,59 +53,6 @@ class wifi_test:
                          break
                      if 0 == self.Wifi_test_parameter.is_continue:
                          continue
-
-            # rtn = self.connect_difrouter_test(self.Wifi_test_parameter.connect_difrouter_test_count)
-            # if 1 != rtn :
-            #     self.Wifi_test_status.all_test_fail_count += 1
-            #     if 0 == self.Wifi_test_parameter.is_continue:
-            #         continue
-            # rtn = self.connect_info_test(self.Wifi_test_parameter.connect_info_test_count)
-            # if 1 != rtn:
-            #     self.Wifi_test_status.all_test_fail_count += 1
-            #     if 0 == self.Wifi_test_parameter.is_continue:
-            #         continue
-            # if 1 != self.bind_ubind_test(self.Wifi_test_parameter.bind_ubind_test_count):
-            #     continue
-            # rtn = self.ntp_test(self.Wifi_test_parameter.ntp_test_count)
-            # if 1 != rtn:
-            #     self.Wifi_test_status.all_test_fail_count += 1
-            #     if 0 == self.Wifi_test_parameter.is_continue:
-            #         continue
-            # rtn = self.router_disnet_test(self.Wifi_test_parameter.router_disnet_test_count)
-            # if 1 != rtn:
-            #     self.Wifi_test_status.all_test_fail_count += 1
-            #     if 0 == self.Wifi_test_parameter.is_continue:
-            #         continue
-            # rtn = self.router_blackout_test(self.Wifi_test_parameter.router_blackout_test_count)
-            # if 1 != rtn:
-            #     self.Wifi_test_status.all_test_fail_count += 1
-            #     if 0 == self.Wifi_test_parameter.is_continue:
-            #         continue
-            # #rtn = self.headbeat_test(self.Wifi_test_parameter.headbeat_test_count)
-            # if 1 != rtn:
-            #     self.Wifi_test_status.all_test_fail_count += 1
-            #     if 0 == self.Wifi_test_parameter.is_continue:
-            #         continue
-            # rtn = self.unite_firmware_test(self.Wifi_test_parameter.unite_firmware_test_count)
-            # if 1 != rtn:
-            #     self.Wifi_test_status.all_test_fail_count += 1
-            #     if 0 == self.Wifi_test_parameter.is_continue:
-            #         continue
-            # rtn = self.con_wifi_test(self.Wifi_test_parameter.con_wifi_test_count)
-            # if 1 != rtn:
-            #     self.Wifi_test_status.all_test_fail_count += 1
-            #     if 0 == self.Wifi_test_parameter.is_continue:
-            #         continue
-            # rtn = self.con_lan_wifi_test(self.Wifi_test_parameter.con_lan_wifi_test_count)
-            # if 1 != rtn:
-            #     self.Wifi_test_status.all_test_fail_count += 1
-            #     if 0 == self.Wifi_test_parameter.is_continue:
-            #         continue
-            # rtn = self.license_test(self.Wifi_test_parameter.license_test_count)
-            # if 1 != rtn:
-            #     self.Wifi_test_status.all_test_fail_count += 1
-            #     if 0 == self.Wifi_test_parameter.is_continue:
-            #         continue
             # #rtn = self.ota_test(self.Wifi_test_parameter.ota_test_count)
             # if 1 != rtn:
             #     self.Wifi_test_status.all_test_fail_count += 1
@@ -146,13 +93,13 @@ class wifi_test:
         self.Wifi_test_parameter.uart_baud = int(paramnode.getElementsByTagName('uart_baud')[0].childNodes[0].nodeValue.strip())
         self.Wifi_status.Wifitype = int(paramnode.getElementsByTagName('wifi_type')[0].childNodes[0].nodeValue.strip())
     def custom_parm(self):
-        input = raw_input("please input uart port")
+        input = raw_input("please input uart port (e.g 11)")
         if input != "":
             self.Wifi_test_parameter.uart_port = "com" + input
-        input = raw_input("please input uart baud")
+        input = raw_input("please input uart baud (e.g 9600)")
         if input != "":
             self.Wifi_test_parameter.uart_baud = int(input)
-        input = raw_input("please input wifi type")
+        input = raw_input("please input wifi type (e.g mx)")
         if input != "":
             self.Wifi_status.Wifitype = self.wifitype[input[0:2].upper()]
         self.save_param()
@@ -487,39 +434,6 @@ class wifi_test:
         if self.Wifi_status.Applicense != self.Wifi_status.Wifilicense:
             return 0
         return 1
-# import unittest
-# class TestZcaotutest(unittest.TestCase):
-#     def setUp(self):
-#         self.aotutest = wifi_test()
-#     def test_connect_info_test(self):
-#         self.assertEqual(1, self.aotutest.connect_info_test(self.aotutest.Wifi_test_parameter.connect_info_test_count))
-#
-#     def test_bind_ubind_test(self):
-#         self.assertEqual(1, self.aotutest.bind_ubind_test(self.aotutest.Wifi_test_parameter.bind_ubind_test_count))
-#
-#     def test_connect_difrouter_test(self):
-#         self.assertEqual(1, self.aotutest.connect_difrouter_test(self.aotutest.Wifi_test_parameter.connect_difrouter_test_count))
-#
-#     def test_ntp_test(self):
-#         self.assertEqual(1, self.aotutest.ntp_test(self.aotutest.Wifi_test_parameter.ntp_test_count))
-#
-#     def test_router_disnet_test(self):
-#         self.assertEqual(1, self.aotutest.router_disnet_test(self.aotutest.Wifi_test_parameter.router_disnet_test_count))
-#
-#     def test_router_blackout_test(self):
-#         self.assertEqual(1, self.aotutest.router_blackout_test(self.aotutest.Wifi_test_parameter.router_blackout_test))
-#
-#     def test_unite_firmware_test(self):
-#         self.assertEqual(1, self.aotutest.unite_firmware_test(self.aotutest.Wifi_test_parameter.unite_firmware_test_count))
-#
-#     def test_con_wifi_test(self):
-#         self.assertEqual(1, self.aotutest.con_wifi_test(self.aotutest.Wifi_test_parameter.con_wifi_test_count))
-#
-#     def test_con_lan_wifi_test(self):
-#         self.assertEqual(1, self.aotutest.con_lan_wifi_test(self.aotutest.Wifi_test_parameter.con_lan_wifi_test_count))
-#     def tearDown(self):
-#         self.aotutest.Ser.close()
 
 if __name__ == '__main__':
     test = wifi_test()
-    #unittest.main()
