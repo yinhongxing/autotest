@@ -230,27 +230,12 @@ class wifi_test:
             print "%s !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!%s test count %d,fail count %d!!!!!!!!!!!!!!!!!!!!!!!!!" % (otherStyleTime,test_case_name, self.test_count[test_id], flag)
             self.mail_content = self.mail_content + otherStyleTime + " " + test_case_name + "fail\n"
             return 0
-
-    def connect_difrouter_test(self):
+    def smartlink(self,router,is_bind):
         while True:
             self.Wifi_status.status_init()
             self.serialThread.smartlink()
             time.sleep(5)
-            self.socketThread.smartlink("HW_test",self.Wifi_status.Wifitype,1, 0,self.Wifi_status.DeviceId)
-            if self.data_unpack(1) == 0:
-                self.Wifi_test_status.smarlink_fail_count += 1
-                return 0
-            else:
-                break
-        if self.is_connect_cloud(60) != 1:
-            print "err self.is_connect_cloud(60) != 1"
-            self.mail_content = self.mail_content + "联云超时\n"
-            return 0
-        while True:
-            self.Wifi_status.status_init()
-            self.serialThread.smartlink()
-            time.sleep(5)
-            self.socketThread.smartlink("hexin", self.Wifi_status.Wifitype, 1, 0, self.Wifi_status.DeviceId)
+            self.socketThread.smartlink(router, self.Wifi_status.Wifitype, 1, is_bind, self.Wifi_status.DeviceId)
             if self.data_unpack(1) == 0:
                 self.Wifi_test_status.smarlink_fail_count += 1
                 return 0
@@ -261,20 +246,14 @@ class wifi_test:
             self.mail_content = self.mail_content + "联云超时\n"
             return 0
         return 1
+    def connect_difrouter_test(self):
+        if self.smartlink("HW_test",0) != 1:
+            return 0
+        if self.smartlink("hexin",0) !=1:
+            return 0
+        return 1
     def connect_info_test(self):
-        while True:
-            self.Wifi_status.status_init()
-            self.serialThread.smartlink()
-            time.sleep(5)
-            self.socketThread.smartlink("hexin", self.Wifi_status.Wifitype, 1, 0, self.Wifi_status.DeviceId)
-            if self.data_unpack(1) == 0:
-                self.Wifi_test_status.smarlink_fail_count += 1
-                return 0
-            else:
-                break
-        if  self.is_connect_cloud(60) != 1:
-            print "err self.is_connect_cloud(60) != 1"
-            self.mail_content = self.mail_content + "联云超时\n"
+        if self.smartlink("hexin", 0) != 1:
             return 0
         if self.Wifi_status.ConRedirect == 0 or self.Wifi_status.ConGateway == 0:
             print "err not connect redirect"
@@ -299,18 +278,7 @@ class wifi_test:
             print "err ubind fail"
             self.mail_content = self.mail_content +"强制解绑失败\n"
             return 0
-        while True:
-            self.serialThread.smartlink()
-            time.sleep(10)
-            self.socketThread.smartlink("hexin", self.Wifi_status.Wifitype, 1, 1, self.Wifi_status.DeviceId)
-            if self.data_unpack(1) == 0:
-                self.Wifi_test_status.smarlink_fail_count += 1
-                return 0
-            else:
-                break
-        if self.is_connect_cloud(60) != 1:
-            print "err self.is_connect_cloud(60) != 1"
-            self.mail_content = self.mail_content + "联云超时\n"
+        if self.smartlink("hexin", 1) != 1:
             return 0
         if self.is_bind(30) !=1:
             print "err bind fail"
@@ -333,8 +301,6 @@ class wifi_test:
             self.socketThread.smartlink("HW_test", self.Wifi_status.Wifitype, 0, 0, self.Wifi_status.DeviceId)
             if self.data_unpack(1) == 0:
                 return 0
-            #time.sleep(10)
-       # self.serialThread.reboot_wifi()
         self.Wifi_status.status_init()
         self.socketThread.con_receptacle(1,0)
         if self.data_unpack(3) == 0:
