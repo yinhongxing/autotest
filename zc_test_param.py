@@ -2,7 +2,7 @@ class wifi_test_parameter:
     def __init__(self):
         self.uart_port = 'com33'
         self.uart_baud = 9600
-        self.is_continue = 1
+        self.is_continue = 0
         self.ota_test_count = 0
         self.connect_difrouter_test_count = 1
         self.connect_info_test_count = 1
@@ -32,6 +32,7 @@ class wifi_status:
         self.Applicense = [0]*29
         self.Wifitype = 2
         self.DeviceIp =""
+        self.WifiInit = 0
     def status_init(self):
         self.ConRedirect = 0
         self.ConGateway = 0
@@ -40,6 +41,7 @@ class wifi_status:
         self.Ubind = 0
         self.Bind = 0
         self.ConWifi = 0
+        self.WifiInit = 0
         #self.wifilicense = [0] * 29
         #self.applicense = [0] * 29
 class wifi_test_status:

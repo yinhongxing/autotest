@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
 import time
 import threading
 
@@ -21,8 +23,8 @@ class SerialThread(threading.Thread):
         self.newversion = ""
         self.msgcode={2:self.connect_wifi,3:self.disconnect_wifi,4:self.connect_cloud,5:self.disconnect_cloud,39:self.wifi_state,68:self.wifi_recv_msg,13:\
             self.wifi_recv_ntp,51:self.license_ok}
-        self.stacode ={2:self.wifi_con_redirect,3:self.wifi_con_gateway,4:self.wifi_license,6:self.wifi_unbind_ok,7:self.wifi_init_ok,5:self.wifi_version,\
-                       8:self.wifi_deviceid,9:self.wifi_bind_ok,10:self.wifi_heartbeat_ok,11:self.wifi_deviceip}
+        self.stacode ={2:self.wifi_con_redirect,3:self.wifi_con_gateway,4:self.wifi_license,6:self.wifi_unbind_ok,\
+                       7:self.wifi_init_ok,8:self.wifi_deviceid,9:self.wifi_bind_ok,10:self.wifi_heartbeat_ok,11:self.wifi_deviceip}
         self.wifitype = {"HF":1,"MX":2,"MA":3,"QC":4,"ES":9,"RT":10,"AI":11}
     def run(self):
         while True:
@@ -148,19 +150,13 @@ class SerialThread(threading.Thread):
                 if self.databuf[i+11] >= 128:
                     self.databuf[i + 11] = self.databuf[i + 11] - 256
                 self.Wifi_status.Wifilicense[i] = self.databuf[i+11]
-
-        #print self.Wifi_status.Wifilicense
-    def wifi_init_ok(self):
-        #print "wifi init ok"
-
-        self.Wifi_status.status_init()
     def wifi_con_redirect(self):
         self.Wifi_status.ConRedirect += 1
         #print "wifi con redirect %d" %(self.Wifi_status.ConRedirect)
     def wifi_con_gateway(self):
         self.Wifi_status.ConGateway += 1
         #print "wifi con gateway %d" %(self.Wifi_status.ConGateway)
-    def wifi_version(self):
+    def wifi_init_ok(self):
         WifiVersion =[0]*20
         for i in range(20):
            WifiVersion[i]=chr(self.databuf[7+i])
@@ -173,7 +169,7 @@ class SerialThread(threading.Thread):
         else:
             self.Wifi_test_status.ota_test_fail_count +=1
        # #print "ota_test_success_count is %d,ota_test_fail_count is %d" %(self.Wifi_test_status.ota_test_success_count,\
-                                                                       #  self.Wifi_test_status.ota_test_fail_count)
+        self.Wifi_status.WifiInit = 1                                                               #  self.Wifi_test_status.ota_test_fail_count)
         self.q.put(3)
         ##print ("%s" % (self.Wifi_status.WifiVersion))
         ##print "wifi version ok"

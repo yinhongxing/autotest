@@ -14,8 +14,10 @@ class SocketThread(threading.Thread):
         self.port = 4689
         self.s.bind(('', self.port))
         self.s.listen(5)
+        localIP = socket.gethostbyname(socket.gethostname())
+        print "local ip:%s " % localIP
         self.c, (remotehost, remoteport) = self.s.accept()
-        ##print ("[%s:%s]connect " % (remotehost, remoteport))
+        print ("[%s:%s]connect " % (remotehost, remoteport))
         self.start()
     def run(self):
 

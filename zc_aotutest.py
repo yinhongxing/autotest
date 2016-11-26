@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
 import Queue
 import sys
 import datetime
@@ -9,10 +11,12 @@ import os
 from zc_serial import  *
 from zc_socket import  *
 from zc_test_param import *
+from zc_sendmail import *
 import xml.dom
 
 class wifi_test:
     def __init__(self):
+        self.mail_content = ""
         self.test_case = {0:self.connect_difrouter_test,1:self.connect_info_test,2:self.bind_ubind_test,3:self.ntp_test,\
                           4:self.router_disnet_test,
                           5:self.router_blackout_test,\
@@ -37,14 +41,17 @@ class wifi_test:
         self.serialQueue = Queue.Queue(100)
         self.serialThread = SerialThread(self.Ser,self.Wifi_status,self.Wifi_test_status,self.serialQueue)
         self.socketThread = SocketThread(self.socketQueue)
-        self.serialThread.reboot_wifi()
-        time.sleep(5)
         while True:
+            self.mail_content = ""
             self.Wifi_test_status.all_test_fail_count = 0
             self.Wifi_test_status.smarlink_fail_count = 0
             self.Wifi_status.status_init()
             self.Wifi_status.Env = 0xff
             self.serialThread.reboot_wifi()
+            if self.is_wifi_init(10) != 1:
+                print "wifi init fail"
+                break
+            self.mail_content = self.mail_content + self.Wifi_status.WifiVersion[0:2] + "\n"
             for i in range(len(self.test_count)):
                 rtn = self.case_test_count(i)
                 if 1 != rtn:
@@ -52,7 +59,8 @@ class wifi_test:
                      if i == 2:
                          break
                      if 0 == self.Wifi_test_parameter.is_continue:
-                         continue
+                         break
+            
             # #rtn = self.ota_test(self.Wifi_test_parameter.ota_test_count)
             # if 1 != rtn:
             #     self.Wifi_test_status.all_test_fail_count += 1
@@ -63,7 +71,12 @@ class wifi_test:
                 print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test success!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
             else:
                 print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test fail!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-
+            if 1!=rtn and 0 == self.Wifi_test_parameter.is_continue:
+                break
+        if send_mail(mailto_list, "错误报警", self.mail_content):
+            print "send success"
+        else:
+            print "send fail"
     def create_element(self,doc, tag, attr):
         elementNode = doc.createElement(tag)
         textNode = doc.createTextNode(attr)
@@ -93,34 +106,41 @@ class wifi_test:
         self.Wifi_test_parameter.uart_baud = int(paramnode.getElementsByTagName('uart_baud')[0].childNodes[0].nodeValue.strip())
         self.Wifi_status.Wifitype = int(paramnode.getElementsByTagName('wifi_type')[0].childNodes[0].nodeValue.strip())
     def custom_parm(self):
-        input = raw_input("please input uart port (e.g 11)")
+        input = raw_input("please input uart port (e.g 11)\n")
         if input != "":
             self.Wifi_test_parameter.uart_port = "com" + input
-        input = raw_input("please input uart baud (e.g 9600)")
-        if input != "":
-            self.Wifi_test_parameter.uart_baud = int(input)
-        input = raw_input("please input wifi type (e.g mx)")
-        if input != "":
-            self.Wifi_status.Wifitype = self.wifitype[input[0:2].upper()]
+        input = raw_input("please input uart baud (default 1)\n1:9600\n2:115200\n")
+        if input == "2":
+            self.Wifi_test_parameter.uart_baud = 115200
+        else:
+            self.Wifi_test_parameter.uart_baud = 9600
+        # input = raw_input("please input wifi type (e.g mx)")
+        # if input != "":
+        #     self.Wifi_status.Wifitype = self.wifitype[input[0:2].upper()]
         self.save_param()
     def select_load_parm(self):
         input = raw_input("please select parameter (default 2)\n1:use default parameter\n2:use load parameter\n3:use custom parameter\n ")
         if input != "1":
-            if input =="2" or input =="":
+            if input =="3":
+                self.custom_parm()
+            else:
                 if(os.path.exists('autotest.xml')):
                     self.load_param()
                 else:
                     print "not exists xml file use custom parameter"
                     self.custom_parm()
-            else:
-                self.custom_parm()
+
+
     def data_unpack(self,msgcode):
         try:
             self.IsOutTime = 0
-            data = self.socketQueue.get(1, 80)
+            data = self.socketQueue.get(1, 70)
         except Queue.Empty:
             self.IsOutTime = 1
-            print "recv data time out"
+            now = datetime.datetime.now()
+            otherStyleTime = now.strftime("%Y-%m-%d %H:%M:%S")
+            print otherStyleTime + " recv data time out"
+            self.mail_content = self.mail_content + otherStyleTime + " recv data time out\n"
         if self.IsOutTime == 1:
             return 0
         else:
@@ -136,7 +156,10 @@ class wifi_test:
 
                 return 1
             else:
-                print "recv data err"+str(text)
+                now = datetime.datetime.now()
+                otherStyleTime = now.strftime("%Y-%m-%d %H:%M:%S")
+                print otherStyleTime + " recv data err"+str(text)
+                self.mail_content = self.mail_content + otherStyleTime + " recv data err"+str(text) + "\n"
                 return 0
     def is_status_ok(self,status,time_count):
         for i in range(time_count):
@@ -158,7 +181,16 @@ class wifi_test:
             return 1
         else:
             return 0
-
+    def is_wifi_init(self,time_count):
+        for i in range(time_count):
+            if self.Wifi_status.WifiInit > 0:
+                break
+            else:
+                time.sleep(1)
+        if self.Wifi_status.WifiInit > 0:
+            return 1
+        else:
+            return 0
     def is_connect_wifi(self, time_count):
         for i in range(time_count):
             if self.Wifi_status.ConWifi > 0:
@@ -196,6 +228,7 @@ class wifi_test:
             return 1
         else:
             print "%s !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!%s test count %d,fail count %d!!!!!!!!!!!!!!!!!!!!!!!!!" % (otherStyleTime,test_case_name, self.test_count[test_id], flag)
+            self.mail_content = self.mail_content + otherStyleTime + " " + test_case_name + "fail\n"
             return 0
 
     def connect_difrouter_test(self):
@@ -206,10 +239,12 @@ class wifi_test:
             self.socketThread.smartlink("HW_test",self.Wifi_status.Wifitype,1, 0,self.Wifi_status.DeviceId)
             if self.data_unpack(1) == 0:
                 self.Wifi_test_status.smarlink_fail_count += 1
+                return 0
             else:
                 break
         if self.is_connect_cloud(60) != 1:
             print "err self.is_connect_cloud(60) != 1"
+            self.mail_content = self.mail_content + "联云超时\n"
             return 0
         while True:
             self.Wifi_status.status_init()
@@ -218,10 +253,12 @@ class wifi_test:
             self.socketThread.smartlink("hexin", self.Wifi_status.Wifitype, 1, 0, self.Wifi_status.DeviceId)
             if self.data_unpack(1) == 0:
                 self.Wifi_test_status.smarlink_fail_count += 1
+                return 0
             else:
                 break
         if self.is_connect_cloud(60) != 1:
             print "err self.is_connect_cloud(60) != 1"
+            self.mail_content = self.mail_content + "联云超时\n"
             return 0
         return 1
     def connect_info_test(self):
@@ -232,10 +269,12 @@ class wifi_test:
             self.socketThread.smartlink("hexin", self.Wifi_status.Wifitype, 1, 0, self.Wifi_status.DeviceId)
             if self.data_unpack(1) == 0:
                 self.Wifi_test_status.smarlink_fail_count += 1
+                return 0
             else:
                 break
         if  self.is_connect_cloud(60) != 1:
             print "err self.is_connect_cloud(60) != 1"
+            self.mail_content = self.mail_content + "联云超时\n"
             return 0
         if self.Wifi_status.ConRedirect == 0 or self.Wifi_status.ConGateway == 0:
             print "err not connect redirect"
@@ -243,19 +282,22 @@ class wifi_test:
         self.Wifi_status.status_init()
         self.serialThread.reboot_wifi()
         if self.is_connect_cloud(60) != 1:
-            print "self.is_connect_cloud(60) != 1"
+            print "err self.is_connect_cloud(60) != 1"
+            self.mail_content = self.mail_content + "联云超时\n"
             return 0
         if self.Wifi_status.ConRedirect != 0  or self.Wifi_status.ConGateway == 0:
             print "err connect redirect"
+            self.mail_content = self.mail_content +"错误的连接redirect\n"
             return 0
         return 1
 
     def bind_ubind_test(self):
         self.Wifi_status.status_init()
         self.serialThread.unbind()
-        time.sleep(1)
+        time.sleep(3)
         if self.Wifi_status.Ubind == 0:
             print "err ubind fail"
+            self.mail_content = self.mail_content +"强制解绑失败\n"
             return 0
         while True:
             self.serialThread.smartlink()
@@ -263,13 +305,16 @@ class wifi_test:
             self.socketThread.smartlink("hexin", self.Wifi_status.Wifitype, 1, 1, self.Wifi_status.DeviceId)
             if self.data_unpack(1) == 0:
                 self.Wifi_test_status.smarlink_fail_count += 1
+                return 0
             else:
                 break
         if self.is_connect_cloud(60) != 1:
-            print "self.is_connect_cloud(60) != 1"
+            print "err self.is_connect_cloud(60) != 1"
+            self.mail_content = self.mail_content + "联云超时\n"
             return 0
         if self.is_bind(30) !=1:
             print "err bind fail"
+            self.mail_content = self.mail_content +"绑定失败\n"
             return 0
         return 1
     def ntp_test(self):
@@ -305,6 +350,7 @@ class wifi_test:
                 time.sleep(4)
         if self.Wifi_status.ConGateway < 22:
             print "err reconnect gateway time out"
+            self.mail_content = self.mail_content + "重连gateway超时\n"
             while True:
                 self.socketThread.con_receptacle(1, 1)
                 if self.data_unpack(3) == 1:
@@ -317,6 +363,7 @@ class wifi_test:
                 time.sleep(4)
         if self.Wifi_status.ConRedirect == 0:
             print "err not connect redirect"
+            self.mail_content = self.mail_content + "没有连接redirect\n"
             while True:
                 self.socketThread.con_receptacle(1, 1)
                 if self.data_unpack(3) == 1:
@@ -328,7 +375,8 @@ class wifi_test:
             if self.data_unpack(3) == 1:
                 break
         if self.is_connect_cloud(60) != 1:
-            print "self.is_connect_cloud(60) != 1"
+            print "err self.is_connect_cloud(60) != 1"
+            self.mail_content = self.mail_content + "联云超时\n"
             return 0
         return 1
 
@@ -348,7 +396,8 @@ class wifi_test:
             if self.data_unpack(3) == 1:
                 break;
         if self.is_connect_cloud(60) == 0:
-            print "self.is_connect_cloud(60) != 1"
+            print "err self.is_connect_cloud(60) != 1"
+            self.mail_content = self.mail_content + "联云超时\n"
             return 0
         return 1
     def headbeat_test(self):
@@ -380,7 +429,8 @@ class wifi_test:
         self.serialThread.reboot_wifi()
         self.Wifi_status.status_init()
         if self.is_connect_cloud(60) == 0:
-            print "self.is_connect_cloud(60) != 1"
+            print "err self.is_connect_cloud(60) != 1"
+            self.mail_content = self.mail_content + "联云超时\n"
             flag += 1
             #break
         self.socketThread.is_online(self.Wifi_status.DeviceId,self.Wifi_status.Env)
@@ -391,7 +441,8 @@ class wifi_test:
         self.serialThread.reboot_wifi()
         self.Wifi_status.status_init()
         if self.is_connect_cloud(60) == 0:
-            print "self.is_connect_cloud(60) != 1"
+            print "err self.is_connect_cloud(60) != 1"
+            self.mail_content = self.mail_content + "联云超时\n"
             return 0
         self.socketThread.is_online(self.Wifi_status.DeviceId, self.Wifi_status.Env)
         if self.data_unpack(6) == 0:
@@ -416,7 +467,8 @@ class wifi_test:
         self.serialThread.reboot_wifi()
         self.Wifi_status.status_init()
         if self.is_connect_cloud(60) == 0:
-            print "self.is_connect_cloud(60) != 1"
+            print "err self.is_connect_cloud(60) != 1"
+            self.mail_content = self.mail_content + "联云超时\n"
             return 0
         self.socketThread.wifi_license(self.Wifi_status.DeviceId,self.Wifi_status.DeviceIp)
         if self.data_unpack(5) == 0:
@@ -424,12 +476,14 @@ class wifi_test:
         self.serialThread.reboot_wifi()
         self.Wifi_status.status_init()
         if self.is_connect_cloud(60) == 0:
-            print "self.is_connect_cloud(60) != 1"
+            print "err self.is_connect_cloud(60) != 1"
+            self.mail_content = self.mail_content + "联云超时\n"
             return 0
         self.serialThread.reboot_wifi()
         self.Wifi_status.status_init()
         if self.is_connect_cloud(60) == 0:
-            print "self.is_connect_cloud(60) != 1"
+            print "err self.is_connect_cloud(60) != 1"
+            self.mail_content = self.mail_content + "联云超时\n"
             return 0
         if self.Wifi_status.Applicense != self.Wifi_status.Wifilicense:
             return 0
